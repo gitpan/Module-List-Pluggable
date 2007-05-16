@@ -1,0 +1,6 @@
+Revision history for Perl extension Module::List::Pluggable.
+
+0.01  Thu Apr 26 23:03:59 2007
+	- original version; created by h2xs 1.23 with options
+		-AX -nModule::List::Pluggable -b5.6.0
+
