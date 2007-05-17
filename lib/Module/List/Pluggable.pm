@@ -46,6 +46,8 @@ uses L<Module::List> to do some things similar to L<Module::Pluggable>.
 None by default.  The following are exported on request
 (including via an ":all" tag that brings in all of them):
 
+=over
+
 =cut
 
 use 5.006;
@@ -69,7 +71,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(
 );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 my $DEBUG = 1;
 
 =item list_modules_under
@@ -475,8 +477,18 @@ sub run_code_or_die {
 
 1;
 
+=back
 
 =head1 MOTIVATION
+
+A "plug-in" architecture is a way of ensuring that some code can
+be extended at a later date.
+
+# TODO re-write, to bring some later material up here
+
+
+=head2 list_modules_under
+
 
 The wrapper routine "list_modules_under" seemed adviseable
 because of the very clunky interface of the "module_list"
