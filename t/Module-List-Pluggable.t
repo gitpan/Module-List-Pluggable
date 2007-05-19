@@ -31,6 +31,7 @@ ok(1, "Traditional: If we made it this far, we're ok.");
 ($DEBUG) && print STDERR "test_lib: $test_lib\n";
 
 {#4, 5
+
   my $testname = "Testing list_modules_under";
   my @modules_via_file_find = ();
   my $module_count_file_find = 0;
@@ -68,6 +69,7 @@ ok(1, "Traditional: If we made it this far, we're ok.");
 }
 
 {#6,7
+
   my $testname = "Testing import_modules: using a sub from a plugin";
   my $plugin_root = "DummyPlugins";
   my $plugin_exceptions = undef;
@@ -86,6 +88,7 @@ ok(1, "Traditional: If we made it this far, we're ok.");
 }
 
 {#8,9
+
   my $testname = "Testing import_modules: using a module that uses a sub from a plugin";
 
   my $plugin_root = "DummyPlugins";
@@ -103,9 +106,8 @@ ok(1, "Traditional: If we made it this far, we're ok.");
       "$testname: back_atcha");
 }
 
-
-
 SKIP:{#10
+
   my $testname = "Testing import_modules: importing a routine from the List::Filter project.";
 
   my $plugin_root = "List::Filter::Filters";
@@ -150,6 +152,7 @@ SKIP:{#10
 }
 
 {#11
+
   my $testname = "Testing list_exports";
   my $plugin_root = "DummyPlugins";
 
@@ -169,6 +172,7 @@ SKIP:{#10
 }
 
 {#12
+
   my $testname = "Testing report_export_locations";
   my $plugin_root = "DummyPlugins";
 
@@ -189,6 +193,7 @@ SKIP:{#10
 }
 
 {#13
+
   my $testname = "Testing report_export_locations again";
   my $plugin_root = "Clash::Stub::Plugins";
 
@@ -224,8 +229,8 @@ SKIP:{#10
   is_deeply( $report, $expected, "$testname");
 }
 
-
 {#14,15
+
   my $testname = "Testing check_plugin_exports";
 
   my $plugin_root = "Clash::Stub::Plugins";
@@ -233,6 +238,7 @@ SKIP:{#10
   my $err_mess = '';
   my $ret = 0;
   eval {
+
     $ret =
       check_plugin_exports( $plugin_root );
   };
@@ -250,6 +256,7 @@ SKIP:{#10
 }
 
 {#16,17
+
   my $testname = "Testing check_plugin_exports using exceptions to fix problem";
 
   my $plugin_root = "Clash::Stub::Plugins";
@@ -258,6 +265,7 @@ SKIP:{#10
   my $err_mess = '';
   my $ret = 0;
   eval {
+
     $ret =
       check_plugin_exports( $plugin_root,
                                   { exceptions => $plugin_exceptions,
@@ -275,10 +283,13 @@ SKIP:{#10
 }
 
 {#18,19,20,21,22
+
   my $testname = "Testing import_modules using exceptions to dodge conflict";
 
   my $plugin_root = "Clash::Stub::Plugins";
   my $plugin_exceptions = ['Clash::Stub::Plugins::Beta'];
+
+  print STDERR "\nNOTE: You may see some \"Subroutine redefined\" warnings: these can be ignored\n";
 
   my $err_mess = '';
   my $ret = 0;
@@ -291,6 +302,7 @@ SKIP:{#10
   if ($@) {
     $err_mess = $@;
   }
+  print STDERR "\n";
 
   cmp_ok($ret, '>=', 1,
          "$testname: positive count of imported modules: $ret");
@@ -315,7 +327,6 @@ SKIP:{#10
 
 {#23
   my $testname = "Testing that import_modules tosses error on export conflict";
-
   my $plugin_root = "Clash::Stub::Plugins";
 
   my $err_mess = '';
@@ -338,6 +349,7 @@ SKIP:{#10
 }
 
 {#24
+
   my $testname = "Testing that import_modules of a broken plugin reports problem.";
 
   my $plugin_root = 'Tree::Limb';
@@ -345,6 +357,7 @@ SKIP:{#10
   my $err_mess = '';
   my $ret = 0;
   eval {
+
     $ret =
       import_modules( $plugin_root );
   };

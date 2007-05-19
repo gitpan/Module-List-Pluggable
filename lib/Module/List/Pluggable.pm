@@ -71,7 +71,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(
 );
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 my $DEBUG = 1;
 
 =item list_modules_under
@@ -152,7 +152,7 @@ list of exceptions, modules to be skipped (aref)
 =item  "beware_conflicts"
 
 if true, errors out if a conflict is discovered (i.e., the
-same name imported twice from different plugins).  defaults
+same name imported twice from different plug-ins).  defaults
 to 1, set to 0 if you don't want to worry about this
 (perhaps for efficiency reasons?)
 
@@ -227,7 +227,7 @@ list of exceptions, modules to be skipped (aref)
 =item  "beware_conflicts"
 
 if true, errors out if a conflict is discovered (i.e., the
-same name imported twice from different plugins).  defaults
+same name imported twice from different plug-ins).  defaults
 to 1, set to 0 if you don't want to worry about this
 (perhaps for efficiency reasons?)
 
@@ -235,7 +235,7 @@ to 1, set to 0 if you don't want to worry about this
 
 =back
 
-Returns: the number of successfully loaded plugin modules.
+Returns: the number of successfully loaded plug-in modules.
 
 =cut
 
@@ -305,7 +305,7 @@ sub list_exports {
 =item report_export_locations
 
 Reports on all routines that are exported by the modules
-under the object's plugin root, including the locations.
+under the object's plug-in root, including the locations.
 where the routines are found.
 
 Inputs:
@@ -315,7 +315,7 @@ Inputs:
 
  (2) an optional options hash reference.
 
-     option: "exceptions" -- array reference of plugin modules
+     option: "exceptions" -- array reference of plug-in modules
      to be ignored.
 
 Return:
@@ -363,7 +363,7 @@ sub report_export_locations {
 
 =item check_plugin_exports
 
-Looks for conflicts in the tree of plugins under the given plugin_root.
+Looks for conflicts in the tree of plug-ins under the given plug-in_root.
 Errors out if it finds multiple definitions of exported items of the same names.
 
 The form of the error message is:
@@ -371,9 +371,9 @@ The form of the error message is:
   Multiple definitions of ___ from plugins: ___
 
 An options hash references may be used as the second argument.
-The "exceptions" option: aref of plugin modules to be ignored.
+The "exceptions" option: aref of plug-in modules to be ignored.
 
-Note: as a side-effect, this routine also ensures that each plugin module is free
+Note: as a side-effect, this routine also ensures that each plug-in module is free
 of syntax errors.
 
 =cut
@@ -479,16 +479,116 @@ sub run_code_or_die {
 
 =back
 
+=head1 DISCUSSION
+
+A "plug-in" architecture is a way of allowing the behavior of a
+system can be extended at a later date by the addition of new
+modules without changing the existing code.
+
+=head2 Plug-in Extension Techniques (polymorphism vs. promiscuity)
+
+There are essentially two styles of plug-ins:
+
+=over
+
+=item polymorphic plug-ins
+
+With "polymorphic plug-ins" a particular module appropriate to
+a task is selected from the available set.  In the
+"polymorphic" case, the same set of methods (often called
+the "interface") are defined in different ways, depending on
+the plug-in used.
+
+=item promiscuous plug-ins
+
+With "promiscuous plug-ins", the entire set of plug-in modules
+is used at once.  In the "promiscuous" case, each plug-in
+defines new methods.
+
+=back
+
+In the "polymorhpic plug-ins" case, it's often convenient to get
+a list of available modules, and then choose one of them
+somehow (often by applying a naming convention).  The
+"list_modules_under" routine here is helpful for this, though
+admittedly, it's frequently almost as easy to just require the
+expected module, and detect the error if the module doesn't
+exist.
+
+For "promiscuous plug-ins", there are essentially two sub-types,
+object-oriented and proceedural.  In the object-oriented case,
+a list of modules can be pushed directly into the @ISA array so
+that any methods implemented in the extension modules become
+available via the justly-feared but occasionally useful
+"multiple-inheritence" mechanism.  In the proceedural case, you
+can use the "import_modules" routine provided here, which does
+something like a use-at-runtime of all the plug-ins (it does a
+"require" of each module, and then an "import").
+
+Obviously, in the object-oriented form, the routines in the
+extensions must be written as methods (typically each should
+begin with "my $self=shift").  In the proceedural case, each
+module should use "Exporter", and to work with the
+"import_modules" routine supplied here, all features
+to-be-exported should be in the @EXPORT array of each
+plug-in module.
+
+But note that these two approaches can be combined into a hybrid
+form: Exporter can be used to bring a collection of OOP methods
+into the current object's namespace.
+
+These Exporter-based "promiscuous plug-ins" (whether OOP or
+proceedural) have an advantage over the MI approach in limiting
+the damaged that can be done by the addition of a new, perhaps
+carelessly written plug-in module.
+
+The "import_modules" routine (by default) watches for name
+collisions in the routines imported from the plug-ins, and
+throws an error when they occur.  In comparison the simple MI
+solution will silently use which ever plug-in method it sees
+first in the path; so if the sort order of your list of plug-in
+modules doesn't work as a precedence list, then you may be in
+trouble.
+
+Using the hybrid approach (OOP methods brought into a common
+namespace by using "import_modules"), you need to watch out for
+the fact that these plug-in methods will inherit based on the
+@ISA of the class they're imported into: a "use base" in the
+package where the methods are defined will have no effect.  If
+your plug-ins all need to use common code inherited from a
+particular module, then the parent needs to be in the
+inheritence chain of the class the plug-ins are imported into,
+not in the package they were originally written in.
+
+A restriction that all "promiscuous" OOP plug-in schemes share
+(to my knowledge) is that subclassing essentially doesn't work
+with them.  Simply adding a subclass of a plug-in to the set is
+not enough to reliably override the original: the precedence
+between the two will be silently choosen based on some arbitrary
+criteria (typically accidents of sort order in the module
+names).
+
+Even if a way could be found to solve that problem (e.g. an
+import mechanism that skips parents when a child exists) it
+wouldn't seem adviseable to use it: simply adding a new module
+would have the potential to break existing code.
+
+However, if you *really* feel the need to do something like
+this, the "exceptions" feature of "import_modules" could be
+used to manually suppress the use of a parent plug-in, so that
+only the child plug-in will be imported.  Similarly, if you
+realize that someone else's module is creating problems for
+you, the "exceptions" feature provides an alternate way to
+suppress it's use without uninstalling it.
+
+
 =head1 MOTIVATION
 
-A "plug-in" architecture is a way of ensuring that some code can
-be extended at a later date.
-
-# TODO re-write, to bring some later material up here
-
+The L<List::Filter> project is an example of a use of
+"promiscuous plug-ins" to provide an extreme (perhaps
+"pathological") degree of extensibility.
 
 =head2 list_modules_under
-
 
 The wrapper routine "list_modules_under" seemed adviseable
 because of the very clunky interface of the "module_list"
@@ -523,90 +623,6 @@ to it.  However, it does understand that an empty string should
 be interpreted as the entire list of installed modules (it takes
 a long time to get this full list, though).
 
-=head1 Plugin Extension Techniques (polymorphism vs. promiscuity)
-
-There are essentially two styles of plug-ins, in one a
-particular plug-in module appropriate to a task is selected
-from the available set, in the other, the entire set of plug-in
-modules is used at once.  I'm inclined to call these styles
-"polymorphic" and "promiscuous", respectively.
-
-In the first case ("polymorhpic plugins"), it's often
-convenient to get a list of available modules, and then choose
-one of them somehow, often by applying a naming convention,
-e.g. to get a handler for a given data type -- though
-alternately, in that case you can just require the needed
-module, and detect the error if the module doesn't exist.
-
-For the second style of plug-ins (the "promiscuous plugins",
-where an entire set is used simultaneously), there are
-essentially two sub-types, object-oriented and proceedural.  In
-the object-oriented case, a list of modules can be pushed
-directly into the @ISA array so that any methods implemented in
-the extension modules become available via the justly-feared
-but occasionally useful "multiple-inheritence" mechanism.  In
-the proceedural case, you can use the "import_modules" routine
-provided here, which does something like a use-at-runtime of
-all the plugins (it does a "require" of each module, and then
-an "import").
-
-Obviously, in the object-oriented form, the routines in the
-extensions must be written as methods (typically each should
-begin with "my $self=shift").  In the proceedural case, each
-module should use "Exporter" (and to work with the
-"import_modules" routine supplied here, all features
-to-be-exported should be in the @EXPORT array of the plugin
-module).
-
-Note that these two approaches can be combined into a hybrid
-form: Exporter can be used to bring a collection of OOP methods
-into the current object's namespace.
-
-These Exporter-based "promiscuous plugins" (whether OOP or
-proceedural) have an advantage over the MI approach in limiting
-the damaged that can be done by the addition of a new, perhaps
-carelessly written plug-in module.
-
-The "import_modules" routine (by default) watches for name
-collisions in the routines imported from the plugins, and
-throws an error when they occur.  In comparison the simple MI
-solution will silently use which ever plugin method it sees
-first in the path; so if the sort order of your list of plugin
-modules doesn't work as a precedence list, then you may be in
-trouble.
-
-Using the hybrid approach (OOP methods brought into a common
-namespace by using "import_modules"), you need to watch out for
-the fact that these plugin methods will inherit based on the
-@ISA of the class they're imported into: a "use base" in the
-package where the methods are defined will have no effect.  If
-your plugins all need to use common code inherited from a
-particular module, then the parent needs to be in the
-inheritence chain of the class the plugins are imported into,
-not in the package they were originally written in.
-
-A restriction that all "promiscuous" OOP plugin schemes share
-(to my knowledge) is that subclassing essentially doesn't work
-with them.  Simply adding a subclass of a plugin to the set is
-not enough to reliably override the original: the precedence
-between the two be silently choosen based on some arbitrary
-criteria (typically accidents of sort order in the module
-names).
-
-Even if a way could be found to solve that problem (e.g. an
-import mechanism that skips parents when a child exists) it
-wouldn't seem adviseable to use it: adding a new module might
-break existing code.
-
-However, if you *really* feel the need to do something like
-this, the "exceptions" feature of "import_modules" could be
-used to manually suppress the use of a parent plugin, so that
-only the child plugin will be imported.  Similarly, if you
-realize that someone else's module is creating problems for
-you, the "exceptions" feature provides an alternate way to
-suppress it's use without uninstalling it.
-
-
 =head1 LIMITATIONS
 
 When using "import_modules" (which brings in methods via Exporter):
@@ -614,10 +630,10 @@ When using "import_modules" (which brings in methods via Exporter):
   o  methods can inherit from the @ISA of their new context, but
      not the package they came from.
 
-  o  subclassing an existing plugin to create a new one should
+  o  subclassing an existing plug-in to create a new one should
      almost always be avoided: the precedence of child over
-     parent can't be guaranteed, and adding a new plugin can
-     break existing code.
+     parent can't be easily guaranteed, and adding a new plug-in
+     can break existing code.
 
 =head1 SEE ALSO
 
@@ -629,10 +645,6 @@ L<Module::Find>
 
 Add a "recurse" option to both routines: default to recurse, but
 allow them to work on a single directory level.
-
-When importing a plugin module with a syntax error, this
-code does not even warn about the problem.
-
 
 =head1 AUTHOR
 

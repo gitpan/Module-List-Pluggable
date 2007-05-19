@@ -6,3 +6,8 @@ Revision history for Perl extension Module::List::Pluggable.
 
 0.02  Wed May 16 18:12:32 PDT 2007
         - fixed tests: neglected to add t/dat/* to MANIFEST
+
+
+0.03  Wed May 16 18:12:32 PDT 2007
+        - specified dependency on Class::Base
+
