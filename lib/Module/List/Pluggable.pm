@@ -12,18 +12,19 @@ Module::List::Pluggable - list or require sub-sets of modules
   # in perl's module namespace
   my @plugins = list_modules_under( "My::Project::Plugins" );
 
-  # require/import all modules in the tree
+  # require & import all modules in the tree
   import_modules( "My::Project::Plugins::ViaExporter" );
 
   # skip some of them
   import_modules( "My::Project::Plugins::ViaExporter",
-                  { exceptions => 'My::Project::Plugins::ViaExporter::ButNotThese' }
-  );
+                  { exceptions =>
+                      'My::Project::Plugins::ViaExporter::ButNotThese' }
+                );
 
   # just require them, don't do an "import"
   import_modules( "My::Project::Plugins::ViaExporter",
-                  { import=>0 }
-  );
+                  { import => 0 }
+                 );
 
 =head1 DESCRIPTION
 
@@ -44,7 +45,7 @@ uses L<Module::List> to do some things similar to L<Module::Pluggable>.
 =head2 EXPORT
 
 None by default.  The following are exported on request
-(including via an ":all" tag that brings in all of them):
+(":all" tag is available that brings in all of them):
 
 =over
 
@@ -71,7 +72,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(
 );
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 my $DEBUG = 1;
 
 =item list_modules_under
@@ -175,7 +176,7 @@ sub import_modules {
   }
 
   # check for multiple plugin exports with the same name
-  # (also makes sure all plugin modules compile)
+  # (also checks for syntax errors in plugin modules)
   check_plugin_exports( $root,
                         { exceptions => $exceptions,
                         } ) if ( $beware_conflicts );
@@ -226,9 +227,9 @@ list of exceptions, modules to be skipped (aref)
 
 =item  "beware_conflicts"
 
-if true, errors out if a conflict is discovered (i.e., the
-same name imported twice from different plug-ins).  defaults
-to 1, set to 0 if you don't want to worry about this
+If true, errors out if a conflict is discovered (i.e., the
+same name imported twice from different plug-ins).  Defaults
+to 1.  Set this to 0 if you don't want it to worry about this
 (perhaps for efficiency reasons?)
 
 =back
@@ -250,7 +251,7 @@ sub require_modules {
   }
 
   # check for multiple plugin exports with the same name
-  # (also makes sure all plugin modules compile)
+  # (also checks for syntax errors in plugin modules)
   check_plugin_exports( $root,
                         { exceptions => $exceptions,
                         } ) if ( $beware_conflicts );
@@ -305,18 +306,27 @@ sub list_exports {
 =item report_export_locations
 
 Reports on all routines that are exported by the modules
-under the object's plug-in root, including the locations.
-where the routines are found.
+under the object's plug-in root, including the module
+where each routine is found.
 
 Inputs:
 
- (1) the location to begin scanning in module name space,
-     e.g. "Mah::Modules::Plugins"
+=over
 
- (2) an optional options hash reference.
+=item the location to begin scanning in module name space,
+e.g. "Mah::Modules::Plugins"
 
-     option: "exceptions" -- array reference of plug-in modules
-     to be ignored.
+=item an options hash reference, with options:
+
+=over
+
+=item exceptions
+
+array reference of plug-in modules to be ignored.
+
+=back
+
+=back
 
 Return:
 
@@ -363,18 +373,35 @@ sub report_export_locations {
 
 =item check_plugin_exports
 
-Looks for conflicts in the tree of plug-ins under the given plug-in_root.
-Errors out if it finds multiple definitions of exported items of the same names.
+Looks for conflicts in the tree of plug-ins under the given plug-in root.
+Errors out if it finds multiple definitions of exported items
+of the same names.
 
 The form of the error message is:
 
   Multiple definitions of ___ from plugins: ___
 
-An options hash references may be used as the second argument.
-The "exceptions" option: aref of plug-in modules to be ignored.
+Inputs:
 
-Note: as a side-effect, this routine also ensures that each plug-in module is free
-of syntax errors.
+=over
+
+=item the location to begin scanning in module name space,
+e.g. "Mah::Modules::Plugins"
+
+=item an options hash reference, with options:
+
+=over
+
+=item exceptions
+
+array reference of plug-in modules to be ignored.
+
+=back
+
+=back
+
+Note: this routine also checks that each plug-in module is
+free of syntax errors.
 
 =cut
 
@@ -393,7 +420,8 @@ sub check_plugin_exports {
     my $count = scalar( @sources );
 
     if ($count >= 2) {
-      croak("Multiple definitions of $exported_item from plugins: " . join " ", @sources );
+      croak("Multiple definitions of $exported_item from plugins: " .
+            join " ", @sources );
     }
   }
   return 1;
@@ -404,24 +432,28 @@ sub check_plugin_exports {
 Runs code passed in as a string (not a coderef), so that
 "barewords" can be created from variables.
 
-Returns just the return value of the code expression.
+Returns the value of the code expression.
 
 Generates an error message string using an optional
 passed-in prefix, but with the the value from $@ appended.
 
 As with carp, the error is reported as occuring in the calling
 context, but also includes the full error message with it's own
-location indicated.
-
-Much like carp or warn, the error message is reported to
-STDERR, but excecution contines.
+location indicated.  The error message is reported to STDERR,
+but excecution contines.
 
 Inputs:
 
- (1) code string
- (2) prefix (optional) -  prepended to error messages
+=over
+
+=item code string
+
+=item prefix (optional) pre-pended to error messages.
+
+=back
 
 Example:
+
   my $prefix = "problem with $module_name";
   my $code = "require $module_name";
   run_code_or_warn( $code, $prefix );
@@ -469,7 +501,6 @@ sub run_code_or_die {
     die "$err_mess";
   }
   return $ret;
-
 }
 
 
@@ -481,9 +512,9 @@ sub run_code_or_die {
 
 =head1 DISCUSSION
 
-A "plug-in" architecture is a way of allowing the behavior of a
-system can be extended at a later date by the addition of new
-modules without changing the existing code.
+A "plug-in" architecture is a way of allowing for the behavior of
+a system to be extended at a later date by the addition of new
+modules without any changes to the existing code.
 
 =head2 Plug-in Extension Techniques (polymorphism vs. promiscuity)
 
@@ -507,40 +538,38 @@ defines new methods.
 
 =back
 
-In the "polymorhpic plug-ins" case, it's often convenient to get
-a list of available modules, and then choose one of them
+When implementing "polymorhpic plug-ins", it's often convenient to
+get a list of available modules, and then choose one of them
 somehow (often by applying a naming convention).  The
 "list_modules_under" routine here is helpful for this, though
 admittedly, it's frequently almost as easy to just require the
-expected module, and detect the error if the module doesn't
-exist.
+expected module, and trap the error if the module doesn't exist.
 
 For "promiscuous plug-ins", there are essentially two sub-types,
-object-oriented and proceedural.  In the object-oriented case,
-a list of modules can be pushed directly into the @ISA array so
-that any methods implemented in the extension modules become
-available via the justly-feared but occasionally useful
+object-oriented and proceedural.  In the object-oriented case, a
+list of modules can be pushed directly into the @ISA array so that
+any methods implemented in the extension modules become available
+via the justly-feared but occasionally useful
 "multiple-inheritence" mechanism.  In the proceedural case, you
 can use the "import_modules" routine provided here, which does
-something like a use-at-runtime of all the plug-ins (it does a
+something like a use-at-runtime on all of the plug-ins (it does a
 "require" of each module, and then an "import").
 
 Obviously, in the object-oriented form, the routines in the
-extensions must be written as methods (typically each should
-begin with "my $self=shift").  In the proceedural case, each
-module should use "Exporter", and to work with the
-"import_modules" routine supplied here, all features
-to-be-exported should be in the @EXPORT array of each
-plug-in module.
+extensions must be written as methods (e.g. each should begin
+with "my $self=shift;").  In the proceedural case, each module
+should use "Exporter", and to work with the "import_modules"
+routine supplied here, all features to-be-exported should be in
+the @EXPORT array of each plug-in module.
 
 But note that these two approaches can be combined into a hybrid
 form: Exporter can be used to bring a collection of OOP methods
 into the current object's namespace.
 
 These Exporter-based "promiscuous plug-ins" (whether OOP or
-proceedural) have an advantage over the MI approach in limiting
-the damaged that can be done by the addition of a new, perhaps
-carelessly written plug-in module.
+proceedural) have an advantage over the multiple-inheritence
+approach: the damaged is limited that can be done by the addition
+of a new, perhaps carelessly written plug-in module.
 
 The "import_modules" routine (by default) watches for name
 collisions in the routines imported from the plug-ins, and
@@ -558,7 +587,7 @@ package where the methods are defined will have no effect.  If
 your plug-ins all need to use common code inherited from a
 particular module, then the parent needs to be in the
 inheritence chain of the class the plug-ins are imported into,
-not in the package they were originally written in.
+not in the package in which they were originally written.
 
 A restriction that all "promiscuous" OOP plug-in schemes share
 (to my knowledge) is that subclassing essentially doesn't work
@@ -570,16 +599,16 @@ names).
 
 Even if a way could be found to solve that problem (e.g. an
 import mechanism that skips parents when a child exists) it
-wouldn't seem adviseable to use it: simply adding a new module
+wouldn't seem adviseable to use it: simply adding a new plug-in
 would have the potential to break existing code.
 
-However, if you *really* feel the need to do something like
-this, the "exceptions" feature of "import_modules" could be
-used to manually suppress the use of a parent plug-in, so that
-only the child plug-in will be imported.  Similarly, if you
-realize that someone else's module is creating problems for
-you, the "exceptions" feature provides an alternate way to
-suppress it's use without uninstalling it.
+However, if you *really* feel the need to do something like this,
+the "exceptions" feature of "import_modules" could be used to
+manually suppress a parent plug-in, so that only the child
+plug-in will be imported.  Similarly, if you realize that someone
+else's module is creating problems for you, the "exceptions"
+feature provides an alternate way to suppress it's use without
+uninstalling it.
 
 
 =head1 MOTIVATION
@@ -591,12 +620,13 @@ The L<List::Filter> project is an example of a use of
 =head2 list_modules_under
 
 The wrapper routine "list_modules_under" seemed adviseable
-because of the very clunky interface of the "module_list"
-routine provided by Module::List (see below). But then, at
+because of the very clunky interface of the "list_modules"
+routine provided by L<Module::List> (see below). But then, at
 least Module::List actually works correctly, unlike
-Module::Find (which double-reports modules if found in two
-places in @INC) or the peculiarly limited Module::Pluggable
-which assumes a hardcoded search location in module namespace.
+L<Module::Find> (which double-reports modules if found in two
+places in @INC).  And L<Module::Pluggable> is peculiarly limited
+in that it essentially assumes you'll have a hardcoded search
+location in module namespace.
 
 =head2 Module::List peculiarities
 
@@ -607,9 +637,9 @@ The list_modules routine exported by Module::List has two
                            { list_modules =>1, recurse => 1});
 
 You need to tell list_modules that you really want it to list the
-modules, reminiscent of the "-print" option on the original unix
-"find" command.  But recursion is off by default, the opposite of
-the "find" convention...
+modules (reminiscent of the "-print" option on the original unix
+"find" command).  But recursion is I<off> by default, the
+opposite of the "find" convention...
 
 And the return value from "list_modules" is a hash reference
 (not a 'list' or an aref).  What you actually want is the keys
@@ -620,8 +650,8 @@ of this hash (the values are just undefs):
 Another minor irritation is that the first argument (a place in
 module name space) is required to have a trailing "::" appended
 to it.  However, it does understand that an empty string should
-be interpreted as the entire list of installed modules (it takes
-a long time to get this full list, though).
+be interpreted as the entire list of installed modules (note: it
+takes a long time to get this full list, as you might expect).
 
 =head1 LIMITATIONS
 

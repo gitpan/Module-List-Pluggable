@@ -11,3 +11,5 @@ Revision history for Perl extension Module::List::Pluggable.
 0.03  Wed May 16 18:12:32 PDT 2007
         - specified dependency on Class::Base
 
+0.04   Monday May 28, 2007   7:42 PM
+        - pod revisions
