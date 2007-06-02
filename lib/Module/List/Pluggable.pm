@@ -72,8 +72,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(
 );
 
-our $VERSION = '0.04';
-my $DEBUG = 1;
+our $VERSION = '0.05';
 
 =item list_modules_under
 

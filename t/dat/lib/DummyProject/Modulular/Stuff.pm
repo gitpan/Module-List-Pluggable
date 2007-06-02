@@ -28,7 +28,7 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
-use Hash::Util qw( lock_keys unlock_keys );
+# use Hash::Util qw( lock_keys unlock_keys ); # eliminate perl 5.8 dep
 use Module::List::Pluggable qw(:all);
 
 our $VERSION = '0.01';
@@ -50,19 +50,15 @@ With no arguments, the newly created profile will be empty.
 
 =item init
 
-Initialize object attributes and then lock them down to prevent
+Initialize object attributes and then locks them down to prevent
 accidental creation of new ones.
-
-Note: there is no leading underscore on name "init", though it's
-arguably an "internal" routine (i.e. not likely to be of use to
-client code).
 
 =cut
 
 sub init {
   my $self = shift;
   my $args = shift;
-  unlock_keys( %{ $self } );
+  # unlock_keys( %{ $self } ); # eliminate perl 5.8 dep
 
   # $self->SUPER::init( $args );  # uncomment if this is a child class
 
@@ -81,7 +77,7 @@ sub init {
 
   $self->git_methods_from_plugins();
 
-  lock_keys( %{ $self } );
+  # lock_keys( %{ $self } ); # eliminate perl 5.8 dep
   return $self;
 }
 
@@ -208,14 +204,7 @@ sub set_plugin_exceptions {
 
 =head1 SEE ALSO
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
-
-If you have a mailing list set up for your module, mention it here.
-
-If you have a web site set up for your module, mention it here.
+L<Module::List::Pluggable>
 
 =head1 AUTHOR
 

@@ -8,30 +8,37 @@ use strict;
 $|=1;
 my $DEBUG = 0;
 use Data::Dumper;
-use File::Find;
 
 use Test::More;
-BEGIN { plan tests => 24 };
+BEGIN { plan tests => 23 };
 
+use File::Find;
 use FindBin qw($Bin);
 
-use lib "$Bin/../lib", "../../List-Filter/lib", "$Bin/dat/lib";
-
-my $test_lib = "$Bin/dat/lib"; # Same as the "use lib" value above
-
-#1, 2
+# There's an argument that this is more robust (so let's do both)
+use vars qw( $RealBin );
 BEGIN {
-  use_ok( 'Module::List::Pluggable', ':all' );
-  use_ok( 'DummyProject::Modulular::Stuff' );
+  use File::Spec::Functions qw( rel2abs splitpath catpath);
+  $RealBin = catpath ((splitpath (rel2abs ($0)))[0,1]);
 }
 
-# 3
+use lib "../../List-Filter/lib"; # development only
+use lib "$Bin/../lib", "$RealBin/../lib";
+use lib "$Bin/dat/lib", "$RealBin/dat/lib";
+
+my $test_lib = "$Bin/dat/lib"; # same as use lib value above
+
+#1
+BEGIN {
+  use_ok( 'Module::List::Pluggable', ':all');
+}
+
+# 2
 ok(1, "Traditional: If we made it this far, we're ok.");
 
 ($DEBUG) && print STDERR "test_lib: $test_lib\n";
 
-{#4, 5
-
+{#3, #4
   my $testname = "Testing list_modules_under";
   my @modules_via_file_find = ();
   my $module_count_file_find = 0;
@@ -65,11 +72,9 @@ ok(1, "Traditional: If we made it this far, we're ok.");
   my @modules_sorted = sort @mods ;
   is_deeply( \@modules_sorted, \@expected_modules,
              "$testname: names of modules look right" );
-
 }
 
-{#6,7
-
+{#5, 6
   my $testname = "Testing import_modules: using a sub from a plugin";
   my $plugin_root = "DummyPlugins";
   my $plugin_exceptions = undef;
@@ -87,9 +92,14 @@ ok(1, "Traditional: If we made it this far, we're ok.");
 
 }
 
-{#8,9
-
+SKIP:
+{#7, #8
   my $testname = "Testing import_modules: using a module that uses a sub from a plugin";
+
+  my $how_many = 2;
+  my $test_module = 'DummyProject::Modulular::Stuff';
+  eval "require $test_module";
+  skip "because $test_module is not available ", $how_many if $@;
 
   my $plugin_root = "DummyPlugins";
   my $plugin_exceptions  = undef;
@@ -106,8 +116,8 @@ ok(1, "Traditional: If we made it this far, we're ok.");
       "$testname: back_atcha");
 }
 
-SKIP:{#10
-
+SKIP:
+{#9
   my $testname = "Testing import_modules: importing a routine from the List::Filter project.";
 
   my $plugin_root = "List::Filter::Filters";
@@ -118,7 +128,7 @@ SKIP:{#10
   ($DEBUG) && print "plugins: ", Dumper($modules), "\n";
   my $count = scalar( @{ $modules } );
   unless( $count ) {
-    skip "The List::Filter plugins are not available.", 1;
+    skip "because the List::Filter plugins are not available.", 1;
   }
 
   import_modules( $plugin_root,
@@ -151,8 +161,7 @@ SKIP:{#10
   is_deeply( \@result, \@expected, "$testname");
 }
 
-{#11
-
+{#10
   my $testname = "Testing list_exports";
   my $plugin_root = "DummyPlugins";
 
@@ -171,7 +180,7 @@ SKIP:{#10
             "$testname");
 }
 
-{#12
+{#11
 
   my $testname = "Testing report_export_locations";
   my $plugin_root = "DummyPlugins";
@@ -192,7 +201,7 @@ SKIP:{#10
   is_deeply( $report, $expected, "$testname");
 }
 
-{#13
+{#12
 
   my $testname = "Testing report_export_locations again";
   my $plugin_root = "Clash::Stub::Plugins";
@@ -229,7 +238,7 @@ SKIP:{#10
   is_deeply( $report, $expected, "$testname");
 }
 
-{#14,15
+{#13, #14
 
   my $testname = "Testing check_plugin_exports";
 
@@ -255,7 +264,7 @@ SKIP:{#10
 
 }
 
-{#16,17
+{#15, #16
 
   my $testname = "Testing check_plugin_exports using exceptions to fix problem";
 
@@ -282,7 +291,7 @@ SKIP:{#10
   is( $err_mess, '', "$testname: no error message.");
 }
 
-{#18,19,20,21,22
+{#17, #18, #19, #20, #21
 
   my $testname = "Testing import_modules using exceptions to dodge conflict";
 
@@ -321,11 +330,9 @@ SKIP:{#10
        );
   $quip =~ s{ ^ \s* }{}x;
   is( $quip, "But sometimes they happen on purpose.", "$testname: accidents_happen");
-
 }
 
-
-{#23
+{#22
   my $testname = "Testing that import_modules tosses error on export conflict";
   my $plugin_root = "Clash::Stub::Plugins";
 
@@ -345,11 +352,9 @@ SKIP:{#10
   like( $err_mess,
         qr{ ^ Multiple \s+ definitions  \s+ of  \s+ (\w*?) \s+ from \s+ plugins: \s+ }x,
         "$testname: error message looks right");
-
 }
 
-{#24
-
+{#23
   my $testname = "Testing that import_modules of a broken plugin reports problem.";
 
   my $plugin_root = 'Tree::Limb';
@@ -371,5 +376,4 @@ SKIP:{#10
    like( $err_mess,
          qr{ \b report_export_locations: \s+ Tree::Limb::Broken: \s+ }x,
          "$testname: error message looks right");
-
 }
