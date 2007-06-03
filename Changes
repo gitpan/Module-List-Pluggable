@@ -21,3 +21,8 @@ Revision history for Perl extension Module::List::Pluggable.
         also made the two tests using the test module conditional
         on it loading correctly.
 
+0.06  Sunday June  3, 2007   1:47 PM
+       - fixed another test failure under perl 5.6: sort-order 
+       was undefined in a two-element array in a deeply data 
+       nested structure
+

@@ -221,8 +221,8 @@ SKIP:
                       'Clash::Stub::Plugins::Gamma'
                     ],
           'accidents_happen' => [
-                                  'Clash::Stub::Plugins::Gamma',
-                                  'Clash::Stub::Plugins::Beta'
+                                  'Clash::Stub::Plugins::Beta',
+                                  'Clash::Stub::Plugins::Gamma'
                                 ],
           'parrot_but_not_that_parrot' => [
                                             'Clash::Stub::Plugins::Alpha'
@@ -234,6 +234,8 @@ SKIP:
                               'Clash::Stub::Plugins::Alpha'
                             ]
         };
+
+  @{ $report->{accidents_happen} } = sort @{ $report->{accidents_happen} };
 
   is_deeply( $report, $expected, "$testname");
 }
