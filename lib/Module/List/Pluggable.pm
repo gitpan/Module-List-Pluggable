@@ -51,7 +51,7 @@ None by default.  The following are exported on request
 
 =cut
 
-use 5.006;
+use 5.8.0;
 use strict;
 use warnings;
 use Module::List qw(list_modules);
@@ -72,7 +72,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(
 );
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 =item list_modules_under
 

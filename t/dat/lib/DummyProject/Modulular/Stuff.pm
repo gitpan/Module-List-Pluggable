@@ -23,7 +23,7 @@ namespaces.
 
 =cut
 
-use 5.006;
+use 5.8.0;
 use strict;
 use warnings;
 use Carp;
