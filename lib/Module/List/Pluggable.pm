@@ -72,7 +72,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw(
 );
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =item list_modules_under
 
@@ -312,16 +312,16 @@ Inputs:
 
 =over
 
-=item the location to begin scanning in module name space,
+=item The location to begin scanning in module name space,
 e.g. "Mah::Modules::Plugins"
 
-=item an options hash reference, with options:
+=item An options hash reference, with options:
 
 =over
 
 =item exceptions
 
-array reference of plug-in modules to be ignored.
+And array reference of plug-in modules to be ignored.
 
 =back
 
@@ -330,7 +330,7 @@ array reference of plug-in modules to be ignored.
 Return:
 
 A hash reference, keyed by the names of the exported routines
-with values that are array referencess listing all modules
+with values that are array references listing all modules
 where that routine was found.
 
 =cut
@@ -436,10 +436,10 @@ Returns the value of the code expression.
 Generates an error message string using an optional
 passed-in prefix, but with the the value from $@ appended.
 
-As with carp, the error is reported as occuring in the calling
+As with carp, the error is reported as occurring in the calling
 context, but also includes the full error message with it's own
 location indicated.  The error message is reported to STDERR,
-but excecution contines.
+but execution continues.
 
 Inputs:
 
@@ -523,21 +523,19 @@ There are essentially two styles of plug-ins:
 
 =item polymorphic plug-ins
 
-With "polymorphic plug-ins" a particular module appropriate to
-a task is selected from the available set.  In the
-"polymorphic" case, the same set of methods (often called
-the "interface") are defined in different ways, depending on
-the plug-in used.
+With "polymorphic plug-ins" a particular module appropriate to a
+task is selected from the available set.  The same set of methods
+(often called the "interface") are defined in different ways,
+depending on the plug-in used.
 
 =item promiscuous plug-ins
 
 With "promiscuous plug-ins", the entire set of plug-in modules
-is used at once.  In the "promiscuous" case, each plug-in
-defines new methods.
+is used at once, and each plug-in defines new methods.
 
 =back
 
-When implementing "polymorhpic plug-ins", it's often convenient to
+When implementing "polymorphic plug-ins", it's often convenient to
 get a list of available modules, and then choose one of them
 somehow (often by applying a naming convention).  The
 "list_modules_under" routine here is helpful for this, though
@@ -545,18 +543,18 @@ admittedly, it's frequently almost as easy to just require the
 expected module, and trap the error if the module doesn't exist.
 
 For "promiscuous plug-ins", there are essentially two sub-types,
-object-oriented and proceedural.  In the object-oriented case, a
+object-oriented and procedural.  In the object-oriented case, a
 list of modules can be pushed directly into the @ISA array so that
 any methods implemented in the extension modules become available
 via the justly-feared but occasionally useful
-"multiple-inheritence" mechanism.  In the proceedural case, you
+"multiple-inheritance" mechanism.  In the procedural case, you
 can use the "import_modules" routine provided here, which does
 something like a use-at-runtime on all of the plug-ins (it does a
 "require" of each module, and then an "import").
 
 Obviously, in the object-oriented form, the routines in the
 extensions must be written as methods (e.g. each should begin
-with "my $self=shift;").  In the proceedural case, each module
+with "my $self=shift;").  In the procedural case, each module
 should use "Exporter", and to work with the "import_modules"
 routine supplied here, all features to-be-exported should be in
 the @EXPORT array of each plug-in module.
@@ -566,10 +564,9 @@ form: Exporter can be used to bring a collection of OOP methods
 into the current object's namespace.
 
 These Exporter-based "promiscuous plug-ins" (whether OOP or
-proceedural) have an advantage over the multiple-inheritence
-approach: the damaged is limited that can be done by the addition
-of a new, perhaps carelessly written plug-in module.
-
+procedural) have an advantage over the multiple-inheritance
+approach: the damage is limited that can be done by the addition
+of a new, perhaps carelessly written plug-in module:
 The "import_modules" routine (by default) watches for name
 collisions in the routines imported from the plug-ins, and
 throws an error when they occur.  In comparison the simple MI
@@ -585,20 +582,20 @@ the fact that these plug-in methods will inherit based on the
 package where the methods are defined will have no effect.  If
 your plug-ins all need to use common code inherited from a
 particular module, then the parent needs to be in the
-inheritence chain of the class the plug-ins are imported into,
+inheritance chain of the class the plug-ins are imported into,
 not in the package in which they were originally written.
 
 A restriction that all "promiscuous" OOP plug-in schemes share
-(to my knowledge) is that subclassing essentially doesn't work
+(to my knowledge) is that sub-classing essentially doesn't work
 with them.  Simply adding a subclass of a plug-in to the set is
 not enough to reliably override the original: the precedence
-between the two will be silently choosen based on some arbitrary
+between the two will be silently chosen based on some arbitrary
 criteria (typically accidents of sort order in the module
 names).
 
 Even if a way could be found to solve that problem (e.g. an
 import mechanism that skips parents when a child exists) it
-wouldn't seem adviseable to use it: simply adding a new plug-in
+wouldn't seem advisable to use it: simply adding a new plug-in
 would have the potential to break existing code.
 
 However, if you *really* feel the need to do something like this,
@@ -618,7 +615,7 @@ The L<List::Filter> project is an example of a use of
 
 =head2 list_modules_under
 
-The wrapper routine "list_modules_under" seemed adviseable
+The wrapper routine "list_modules_under" seemed advisable
 because of the very clunky interface of the "list_modules"
 routine provided by L<Module::List> (see below). But then, at
 least Module::List actually works correctly, unlike
